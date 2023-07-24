@@ -3,7 +3,7 @@ import './App.scss';
 
 import ReactDataGrid from '@inovua/reactdatagrid-enterprise'
 import '@inovua/reactdatagrid-enterprise/index.css'
-import {useCallback, useState} from "react";
+import {useCallback, useState, useEffect} from "react";
 
 const colCount = 10;
 const groups = ['group1', 'group2', 'group3', 'group4', 'group5']
@@ -56,7 +56,9 @@ const gridStyle = { minHeight: 550 }
 
 function App7() {
 
+	const [mouseDown, setMouseDown] = useState(0);
 	const [gridRef, setGridRef] = useState(null);
+	const [selectOnDrag, setSelectOnDrag] = useState(true);
 	const [groupBy, setGroupBy] = useState(['group']);
 	const [unselected, setUnselected] = useState({});
 	const [selected, setSelected] = useState({});
@@ -66,17 +68,70 @@ function App7() {
 	//const [dataSource, setDataSource] = useState(d);
 	const [dataSource, setDataSource] = useState(nonGroupRows);
 
-	const handleCellSelectionChange = (selected) => {
-		console.log(cellSelection, selected);
-		//setCellSelection({'0,col3': true, '0,col4': true, '0,col5': true, '0,col6': true});
-		setCellSelection(selected);
+	useEffect(() => {
+		window.addEventListener('mousedown', handleMouseDown);
+		window.addEventListener('mouseup', handleMouseUp);
+
+		// cleanup this component
+		return () => {
+			window.removeEventListener('mousedown', handleMouseDown);
+			window.removeEventListener('mouseup', handleMouseUp);
+		};
+	}, [mouseDown]);
+
+	const handleMouseDown = (e) => {
+		console.log('handleMouseDown', mouseDown, mouseDown+1);
+		setMouseDown(mouseDown+1);
 	}
 
-	const handleSelectionChange = ({selected, unselected}) => {
-		console.log('here');
-		setSelected(selected);
-		setUnselected(unselected)
+	const handleMouseUp = (e) => {
+		console.log('handleMouseUp', mouseDown, mouseDown-1);
+		setMouseDown(mouseDown-1);
+
+		setSelectOnDrag(false);
+		setCellSelection({});
+		gridRef.current.setCellSelection({});
+		ww();
+		//gridRef.current.setLastSelectedCell({});
 	}
+
+	const ww = async () => {
+		setSelectOnDrag(true);
+	}
+
+	const handleCellSelectionChange = useCallback((selected) => {
+		//console.log('handleCellSelectionChange');
+		console.log(gridRef.current);
+		console.log('selected', selected);
+
+		setCellSelection(selected);
+
+		// if(Object.keys(cellSelection).length > 0) {
+		// 	let sel = Object.keys(cellSelection)[0];
+		// 	const sel2 = Object.keys(selected)[Object.keys(selected).length-1];
+		// 	const ss = {};
+		// 	ss[sel] = true;
+		// 	ss[sel2] = true;
+		// 	//console.log('ss1', ss);
+		// 	setCellSelection(ss);
+		// } else {
+		// 	const sel2 = Object.keys(selected)[0];
+		// 	const ss = {};
+		// 	ss[sel2] = true;
+		// 	//console.log('ss2', ss);
+		// 	setCellSelection(ss);
+		// }
+
+
+
+		//console.log('isMouseDown', mouseDown>0);
+	});
+
+	// const handleSelectionChange = ({selected, unselected}) => {
+	// 	console.log('handleSelectionChange');
+	// 	setSelected(selected);
+	// 	setUnselected(unselected)
+	// }
 
 	const onExpandedNodesChange = ({ expandedNodes }) => {
 		setExpandedNodes(expandedNodes)
@@ -84,16 +139,10 @@ function App7() {
 
 	const [activeCell, setActiveCell] = useState([]);
 
-	const handleMouseUp = () => {
-		// setCellSelection({});
-		// setActiveCell([]);
-		// gridRef.current.deselectAll();
-	};
-
 	return (
 		<div className="App">
 
-			<div onMouseUp={handleMouseUp}>
+			<div>
 				<ReactDataGrid
 					key={"grid1"}
 					onReady={setGridRef}
@@ -106,18 +155,22 @@ function App7() {
 					stickyGroupRows={true}
 					defaultGroupBy={groupBy}
 					sortable={false}
+					allowUnsort={false}
+					enableTreeRowReorderNestingChange={false}
+					enableTreeRowReorderParentChange={false}
+					enableColumnFilterContextMenu={false}
 					columns={columns}
 					dataSource={dataSource}
 					enableSelection={false}
 					cellSelection={cellSelection}
 					onCellSelectionChange={handleCellSelectionChange}
-					selectOnDrag={true}
+					selectOnDrag={selectOnDrag}
 					pagination={false}
 					enableKeyboardNavigation={false}
 					activeCell={activeCell}
 					onActiveCellChange={setActiveCell}
 					unselected={unselected}
-					onSelectionChange={handleSelectionChange}
+					//onSelectionChange={handleSelectionChange}
 					selected={selected}
 				></ReactDataGrid>
 			</div>

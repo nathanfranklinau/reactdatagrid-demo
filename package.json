@@ -33,7 +33,7 @@
 		"overrides": [
 			{
 				"files": [
-
+					"src/js/webix/webix.js"
 				],
 				"rules": {
 					"no-undef": "off",
